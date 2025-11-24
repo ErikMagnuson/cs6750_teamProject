@@ -427,7 +427,7 @@ const SUBJECTS = {
     nodes: [
       { id: 'single_qubit', label: 'Single-Qubit Gates', year: 1995, x: 50, y: 20, type: 'paradigm', concepts: ['Hadamard', 'Pauli-X, Y, Z'], mutation: 'Basic quantum operations on a single qubit.' },
       { id: 'cnot', label: 'CNOT Gate', year: 1995, x: 50, y: 45, type: 'breakthrough', concepts: ['Entanglement', 'Controlled operation'], mutation: 'A two-qubit gate essential for universal computation.' },
-      { id: 'universal_sets', label: 'Universal Gate Sets', year: 1995, x: 50, y: 65,.type: 'refinement', concepts: ['Universality', 'Approximation'], mutation: 'Proving a small set of gates can approximate any quantum operation.' },
+      { id: 'universal_sets', label: 'Universal Gate Sets', year: 1995, x: 50, y: 65, type: 'refinement', concepts: ['Universality', 'Approximation'], mutation: 'Proving a small set of gates can approximate any quantum operation.' },
       { id: 'qec', label: 'Quantum Error Correction', year: 1995, x: 25, y: 85, type: 'bridge', concepts: ['Shor code', 'Stabilizer codes'], mutation: 'Protecting quantum information from noise.' },
       { id: 'surface_code', label: 'Surface Codes', year: 1997, x: 75, y: 85, type: 'refinement', concepts: ['2D lattice', 'High threshold'], mutation: 'A practical approach to fault-tolerant quantum computation.' }
     ],
@@ -440,6 +440,13 @@ const SUBJECTS = {
 
 const TRENDING_SEARCHES = ["Machine Learning Optimization", "Climate Change Models", "CRISPR efficacy", "Quantum Computing Gates"];
 const RECENT_SEARCHES = ["Reinforcement Learning", "Neural Radiance Fields", "Graph Neural Networks"];
+
+const suggestedSearchResults = {
+  "Machine Learning Optimization": [13, 2, 5, 6],
+  "Climate Change Models": [7, 10],
+  "CRISPR efficacy": [8, 11],
+  "Quantum Computing Gates": [9, 12]
+};
 
 // --- SHARED COMPONENTS ---
 
@@ -636,10 +643,10 @@ const EvolutionaryGraph = ({ nodes, edges, activeNodeId, onNodeSelect }) => {
                 strokeWidth={isActive ? 1 : 0.8}
                 className="drop-shadow-sm"
               />
-              <text x={node.x + 5} y={node.y} alignmentBaseline="middle" fontSize="3" fill="#94a3b8" fontFamily="monospace">
+              <text x={node.x + 5} y={node.y} alignmentBaseline="middle" fontSize="2.5" fill="#94a3b8" fontFamily="monospace">
                 {node.year}
               </text>
-              <text x={node.x + 5} y={node.y + 3.5} fontSize="3.5" fontWeight={isActive ? "bold" : "normal"} fill={isActive ? "#1e293b" : "#64748b"}>
+              <text x={node.x + 5} y={node.y + 3.5} fontSize="3" fontWeight={isActive ? "bold" : "normal"} fill={isActive ? "#1e293b" : "#64748b"}>
                 {node.label}
               </text>
             </g>
@@ -931,7 +938,7 @@ const PaperCard = ({ paper, expandedPaperId, setExpandedPaperId, searchContextPa
   );
 };
 
-const SearchBar = ({ inputValue, setInputValue, handleSearchSubmit, setShowAddContextModal, searchContextPapers }) => {
+const SearchBar = ({ inputValue, setInputValue, handleSearchSubmit, setShowAddContextModal, searchContextPapers, size = 'large' }) => {
   const [isFocused, setIsFocused] = useState(false);
   // Mock handler to simulate selecting from history
   const handleHistorySelect = (term) => {
@@ -939,27 +946,37 @@ const SearchBar = ({ inputValue, setInputValue, handleSearchSubmit, setShowAddCo
     // In a real app, you might trigger a search immediately
   };
 
+  const isSmall = size === 'small';
+
   return (
     <div className="w-full relative">
-      <form onSubmit={handleSearchSubmit} className="relative shadow-lg rounded-2xl group focus-within:ring-2 ring-indigo-100 transition-all">
+      <form onSubmit={handleSearchSubmit} className={`relative group transition-all ${isSmall ? '' : 'shadow-lg rounded-2xl focus-within:ring-2 ring-indigo-100'}`}>
         <input
           type="text"
-          className="w-full h-14 pl-5 pr-32 rounded-2xl border-2 border-gray-100 focus:border-indigo-500 outline-none text-lg placeholder:text-gray-400"
-          placeholder="Search for papers, topics, or authors..."
+          className={`w-full border outline-none focus:border-indigo-500 placeholder:text-gray-400
+            ${isSmall 
+              ? 'h-10 pl-4 pr-24 text-base rounded-lg border-gray-200 bg-gray-50 focus:bg-white' 
+              : 'h-14 pl-5 pr-32 text-lg rounded-2xl border-2 border-gray-100'
+            }`}
+          placeholder={isSmall ? "Search..." : "Search for papers, topics, or authors..."}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => setTimeout(() => setIsFocused(false), 200)} // Delay to allow click
+          onBlur={() => setTimeout(() => setIsFocused(false), 200)}
         />
-        {/* Add to Context Button (Inside Search Bar) */}
+        
         <button 
           type="button"
           onClick={() => setShowAddContextModal(true)}
-          className="absolute right-16 top-2 bottom-2 aspect-square text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl flex items-center justify-center transition-colors"
+          className={`absolute aspect-square text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-center transition-colors
+            ${isSmall 
+              ? 'right-10 top-1.5 bottom-1.5 rounded-lg' 
+              : 'right-16 top-2 bottom-2 rounded-xl'
+            }`}
           title="Add paper to search context"
         >
           <div className="relative">
-            <FileText size={20} />
+            <FileText size={isSmall ? 18 : 20} />
             {searchContextPapers.length > 0 ? (
                <div className="absolute -top-2 -right-2 bg-indigo-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-white">
                  {searchContextPapers.length}
@@ -972,20 +989,23 @@ const SearchBar = ({ inputValue, setInputValue, handleSearchSubmit, setShowAddCo
 
         <button 
           type="submit"
-          className="absolute right-2 top-2 bottom-2 aspect-square bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition-colors"
+          className={`absolute aspect-square text-white flex items-center justify-center transition-colors
+            ${isSmall 
+              ? 'right-1.5 top-1.5 bottom-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700' 
+              : 'right-2 top-2 bottom-2 rounded-xl bg-indigo-600 hover:bg-indigo-700'
+            }`}
         >
-          <Search size={20} />
+          <Search size={isSmall ? 18 : 20} />
         </button>
       </form>
 
-      {/* Search History Dropdown */}
-      {isFocused && !inputValue && (
+      {isFocused && !inputValue && !isSmall && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
           <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50">Recent Searches</div>
           {RECENT_SEARCHES.map(term => (
              <button 
                key={term} 
-               onMouseDown={() => handleHistorySelect(term)} // onMouseDown fires before onBlur
+               onMouseDown={() => handleHistorySelect(term)}
                className="w-full text-left px-4 py-3 hover:bg-indigo-50 flex items-center gap-3 text-sm text-gray-700 transition-colors"
              >
                <History size={14} className="text-gray-400" /> {term}
@@ -1011,13 +1031,14 @@ const Header = ({ view, setView, inputValue, setInputValue, handleSearchSubmit, 
       </div>
 
       {view !== 'home' && (
-        <div className="w-full max-w-xl hidden md:block">
+        <div className="w-full max-w-lg hidden md:block">
            <SearchBar 
              inputValue={inputValue} 
              setInputValue={setInputValue} 
              handleSearchSubmit={handleSearchSubmit}
              setShowAddContextModal={setShowAddContextModal}
              searchContextPapers={searchContextPapers}
+             size="small"
            />
         </div>
       )}
@@ -1041,7 +1062,7 @@ const Header = ({ view, setView, inputValue, setInputValue, handleSearchSubmit, 
   </header>
 );
 
-const HomeView = ({ inputValue, setInputValue, handleSearchSubmit, setView, setShowAddContextModal, handleTrendingClick, searchContextPapers }) => (
+const HomeView = ({ inputValue, setInputValue, handleSearchSubmit, setView, setShowAddContextModal, handleTrendingClick, searchContextPapers, handleSuggestedSearch }) => (
   <div className="max-w-4xl mx-auto px-4 py-12 flex flex-col items-center">
     <h1 className="text-4xl font-extrabold text-gray-900 mb-8 tracking-tight">Find clarity in chaos.</h1>
     
@@ -1061,7 +1082,7 @@ const HomeView = ({ inputValue, setInputValue, handleSearchSubmit, setView, setS
         {TRENDING_SEARCHES.map((term, i) => (
           <button 
             key={i} 
-            onClick={() => { setInputValue(term); /* Note: In real app, might auto-submit here */ }}
+            onClick={() => handleSuggestedSearch(term)}
             className="px-3 py-1 bg-white border border-gray-200 hover:border-indigo-300 text-sm text-gray-600 rounded-full transition-colors flex items-center gap-1"
           >
             <TrendingUp size={12} className="text-indigo-500" />
@@ -1102,22 +1123,28 @@ const HomeView = ({ inputValue, setInputValue, handleSearchSubmit, setView, setS
 
 const SearchResultsView = ({ searchQuery, setView, handleConceptClick, searchContextPapers, aiContextPapers, toggleSearchContext, toggleAiContext, expandedPaperId, setExpandedPaperId, setShowCitationModal, handleAuthorClick, handleCitationClick }) => {
   const results = useMemo(() => {
-    if (!searchQuery) return MOCK_PAPERS;
-    const query = searchQuery.toLowerCase();
-    return MOCK_PAPERS.filter(paper => {
-      const title = paper.title.toLowerCase();
-      const abstract = paper.abstract.toLowerCase();
-      const concepts = paper.concepts.join(' ').toLowerCase();
-      const tags = paper.tags.join(' ').toLowerCase();
-      const journal = paper.journal.toLowerCase();
-      const authors = paper.authors.map(id => MOCK_AUTHORS[id].name.toLowerCase()).join(' ');
+    if (!searchQuery) {
+        return [];
+    }
 
-      return title.includes(query) || 
-             abstract.includes(query) || 
-             concepts.includes(query) || 
-             tags.includes(query) ||
-             journal.includes(query) ||
-             authors.includes(query);
+    if (suggestedSearchResults[searchQuery]) {
+      const paperIds = suggestedSearchResults[searchQuery];
+      return MOCK_PAPERS.filter(p => paperIds.includes(p.id));
+    }
+    
+    const queryWords = searchQuery.toLowerCase().split(' ').filter(w => w);
+    
+    return MOCK_PAPERS.filter(paper => {
+      const paperContent = [
+        paper.title,
+        paper.abstract,
+        ...paper.concepts,
+        ...paper.tags,
+        paper.journal,
+        ...paper.authors.map(id => MOCK_AUTHORS[id].name)
+      ].join(' ').toLowerCase();
+
+      return queryWords.every(word => paperContent.includes(word));
     });
   }, [searchQuery]);
 
@@ -1245,15 +1272,11 @@ const ConceptEvolutionView = ({ setView, currentSubject, activeNode, setActiveNo
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden">
       {/* Navigation / Header for Concepts */}
-      <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between z-20">
+      <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-start z-20">
          <div className="flex items-center gap-4">
             <button onClick={() => setView('search')} className="flex items-center gap-2 text-slate-500 hover:text-indigo-700 transition-colors text-sm font-medium">
               <ArrowLeft size={16} /> Back to Search
             </button>
-         </div>
-         
-         <div className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-            {SUBJECTS[currentSubject].name}
          </div>
       </div>
 
@@ -1262,9 +1285,9 @@ const ConceptEvolutionView = ({ setView, currentSubject, activeNode, setActiveNo
         
         {/* Left Panel: The Evolutionary Stream */}
         <div className="w-7/12 bg-slate-50 relative border-r border-slate-200 flex flex-col">
-          <div className="absolute top-4 left-6 z-10 pointer-events-none">
-            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">{SUBJECTS[currentSubject].name}</h2>
-            <p className="text-xs text-slate-400">
+          <div className="bg-white p-4 border-b border-slate-200">
+            <h2 className="text-sm font-bold text-black uppercase tracking-wider">{SUBJECTS[currentSubject].name}</h2>
+            <p className="text-xs text-black">
               1990 - Present
             </p>
           </div>
@@ -1515,6 +1538,12 @@ export default function HaystackApp() {
     }
   };
 
+  const handleSuggestedSearch = (term) => {
+    setInputValue(term);
+    setSearchQuery(term);
+    setView('search');
+  };
+
   const handleAuthorClick = (author) => {
     setSelectedAuthor(author);
     setView('author');
@@ -1601,6 +1630,7 @@ export default function HaystackApp() {
             setShowAddContextModal={setShowAddContextModal}
             handleTrendingClick={handleTrendingClick}
             searchContextPapers={searchContextPapers}
+            handleSuggestedSearch={handleSuggestedSearch}
           />
         )}
         {view === 'search' && (
