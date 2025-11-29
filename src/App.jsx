@@ -918,9 +918,6 @@ const PaperCard = ({ paper, expandedPaperId, setExpandedPaperId, searchContextPa
                       {related.title}
                     </div>
                     <div className="text-xs text-gray-500 mb-1">{related.date}</div>
-                    <button className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded hover:bg-indigo-100 transition-colors">
-                      View
-                    </button>
                   </div>
                 ))}
               </div>
@@ -1121,7 +1118,93 @@ const HomeView = ({ inputValue, setInputValue, handleSearchSubmit, setView, setS
   </div>
 );
 
+const YearSlider = () => {
+  const minYear = 2015;
+  const currentYear = new Date().getFullYear();
+  const [yearRange, setYearRange] = useState([minYear, currentYear]);
+
+  const handleSliderChange = (index, value) => {
+    const newRange = [...yearRange];
+    newRange[index] = value;
+    if (index === 0 && newRange[0] > newRange[1]) {
+      newRange[1] = newRange[0];
+    }
+    if (index === 1 && newRange[1] < newRange[0]) {
+      newRange[0] = newRange[1];
+    }
+    setYearRange(newRange);
+  };
+
+  const handleInputChange = (index, value) => {
+    const parsedValue = value === '' ? (index === 0 ? minYear : currentYear) : parseInt(value, 10);
+    if (!isNaN(parsedValue)) {
+      handleSliderChange(index, parsedValue);
+    }
+  };
+
+  const range = currentYear - minYear;
+  const leftPercent = ((yearRange[0] - minYear) / range) * 100;
+  const rightPercent = ((yearRange[1] - minYear) / range) * 100;
+
+  return (
+    <div>
+      <h3 className="font-bold text-gray-900 text-sm mb-2">Publication Year</h3>
+      
+      <div className="relative h-5 flex items-center mb-2">
+        <div className="relative w-full h-1 bg-gray-200 rounded-lg">
+          <div className="absolute h-1 bg-indigo-600 rounded-lg" style={{ left: `${leftPercent}%`, width: `${rightPercent - leftPercent}%` }}></div>
+          <input
+            type="range"
+            min={minYear}
+            max={currentYear}
+            value={yearRange[0]}
+            onChange={(e) => handleSliderChange(0, parseInt(e.target.value, 10))}
+            className="absolute w-full h-1 appearance-none bg-transparent pointer-events-auto [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-600 [&::-webkit-slider-thumb]:cursor-pointer"
+          />
+          <input
+            type="range"
+            min={minYear}
+            max={currentYear}
+            value={yearRange[1]}
+            onChange={(e) => handleSliderChange(1, parseInt(e.target.value, 10))}
+            className="absolute w-full h-1 appearance-none bg-transparent pointer-events-auto [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-600 [&::-webkit-slider-thumb]:cursor-pointer"
+          />
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-1">
+        <input type="number" value={yearRange[0]} onChange={(e) => handleInputChange(0, e.target.value)} min={minYear} max={currentYear} className="w-full text-sm border-gray-200 rounded-md text-center focus:ring-indigo-500 focus:border-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+        <span className="text-gray-400">-</span>
+        <input type="number" value={yearRange[1]} onChange={(e) => handleInputChange(1, e.target.value)} min={minYear} max={currentYear} className="w-full text-sm border-gray-200 rounded-md text-center focus:ring-indigo-500 focus:border-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+      </div>
+    </div>
+  );
+};
+
 const SearchResultsView = ({ searchQuery, setView, handleConceptClick, searchContextPapers, aiContextPapers, toggleSearchContext, toggleAiContext, expandedPaperId, setExpandedPaperId, setShowCitationModal, handleAuthorClick, handleCitationClick }) => {
+  const [activeQuickFilters, setActiveQuickFilters] = useState([]);
+  const [activeFilters, setActiveFilters] = useState({});
+
+  const toggleQuickFilter = (filter) => {
+    setActiveQuickFilters(prev => 
+      prev.includes(filter) 
+        ? prev.filter(f => f !== filter) 
+        : [...prev, filter]
+    );
+  };
+
+  const toggleFilter = (title, option) => {
+    setActiveFilters(prev => {
+      const currentOptions = prev[title] || [];
+      const newOptions = currentOptions.includes(option)
+        ? currentOptions.filter(o => o !== option)
+        : [...currentOptions, option];
+      return {
+        ...prev,
+        [title]: newOptions,
+      };
+    });
+  };
+
   const results = useMemo(() => {
     if (!searchQuery) {
         return [];
@@ -1166,15 +1249,22 @@ const SearchResultsView = ({ searchQuery, setView, handleConceptClick, searchCon
     ? `Showing results related to search context (${searchContextPapers.length} papers)`
     : `Showing ${results.length} results for "${searchQuery}"`;
 
-  const FilterSection = ({ title, options }) => (
+  const FilterSection = ({ title, options, activeOptions, onToggle }) => (
     <div>
       <h3 className="font-bold text-gray-900 mb-3 text-sm flex items-center gap-2">{title}</h3>
       <div className="flex flex-wrap gap-2">
-        {options.map(opt => (
-          <button key={opt} className="px-2 py-1 text-[10px] border border-gray-200 rounded-full text-gray-600 hover:bg-indigo-50 hover:border-indigo-200 transition-colors bg-white">
-            {opt}
-          </button>
-        ))}
+        {options.map(opt => {
+          const isActive = activeOptions?.includes(opt);
+          return (
+            <button 
+              key={opt} 
+              onClick={() => onToggle(title, opt)}
+              className={`px-2 py-1 text-[10px] font-medium border rounded-full transition-colors ${
+                isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-gray-200 text-gray-600 hover:bg-indigo-50 hover:border-indigo-200'
+              }`}
+            >{opt}</button>
+          );
+        })}
       </div>
     </div>
   );
@@ -1187,23 +1277,26 @@ const SearchResultsView = ({ searchQuery, setView, handleConceptClick, searchCon
           <div>
             <h3 className="font-bold text-gray-900 mb-3 text-sm flex items-center gap-2"><Filter size={14} /> Filters</h3>
             <div className="space-y-2">
-              <button className="w-full text-left px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-600 hover:bg-indigo-50 hover:border-indigo-200 transition-colors">
-                Review Articles
-              </button>
-              <button className="w-full text-left px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-600 hover:bg-indigo-50 hover:border-indigo-200 transition-colors">
-                Open Access
-              </button>
-              <button className="w-full text-left px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-600 hover:bg-indigo-50 hover:border-indigo-200 transition-colors">
-                Recent (Last Year)
-              </button>
+              {["Review Articles", "Open Access", "Recent (Last Year)"].map(filter => {
+                const isActive = activeQuickFilters.includes(filter);
+                return (
+                  <button 
+                    key={filter}
+                    onClick={() => toggleQuickFilter(filter)}
+                    className={`w-full text-left px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                      isActive 
+                        ? 'bg-indigo-600 text-white border border-indigo-600' 
+                        : 'bg-white border border-gray-200 text-gray-600 hover:bg-indigo-50 hover:border-indigo-200'
+                    }`}
+                  >{filter}</button>
+                );
+              })}
             </div>
           </div>
           
-          <FilterSection title="Source" options={["arXiv", "NeurIPS", "Nature", "Science", "ICLR"]} />
-          <FilterSection title="Publication Year" options={["2024", "2023", "2020-2022", "Pre-2020"]} />
-          <FilterSection title="Field of Study" options={["Computer Science", "Neuroscience", "Mathematics", "Physics"]} />
-          <FilterSection title="Author Affiliation" options={["Academic", "Industry", "Government"]} />
-          <FilterSection title="Study Type" options={["Experimental", "Theoretical", "Survey"]} />
+          <YearSlider />
+          <FilterSection title="Study Type" options={["Experimental", "Theoretical", "Survey"]} activeOptions={activeFilters["Study Type"]} onToggle={toggleFilter} />
+          <FilterSection title="Source" options={["arXiv", "NeurIPS", "Nature", "Science", "ICLR"]} activeOptions={activeFilters["Source"]} onToggle={toggleFilter} />
         </div>
       </div>
 
