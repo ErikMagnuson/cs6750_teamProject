@@ -841,11 +841,11 @@ const PaperCard = ({ paper, expandedPaperId, setExpandedPaperId, searchContextPa
              {/* Secondary Actions */}
              <div className="flex gap-1 justify-end mt-auto">
                <button 
-                onClick={(e) => toggleSearchContext(paper, e)}
-                className={`p-1.5 rounded-md border transition-colors ${isSearchSelected ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
-                title={isSearchSelected ? "Remove from Search Context" : "Add to Search Context"}
+                onClick={(e) => toggleAiContext(paper, e)}
+                className={`p-1.5 rounded-md border transition-colors ${isAiSelected ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                title={isAiSelected ? "Remove from AI Assistant" : "Add to AI Assistant"}
                >
-                 {isSearchSelected ? <Plus size={14} className="rotate-45" /> : <Plus size={14} />}
+                 {isAiSelected ? <Plus size={14} className="rotate-45" /> : <Plus size={14} />}
                </button>
                <button 
                  onClick={(e) => { e.stopPropagation(); setShowCitationModal(true); }}
@@ -853,13 +853,6 @@ const PaperCard = ({ paper, expandedPaperId, setExpandedPaperId, searchContextPa
                  title="Cite"
                 >
                  <Quote size={14} />
-               </button>
-               <button 
-                onClick={(e) => toggleAiContext(paper, e)}
-                className={`p-1.5 rounded-md border transition-colors ${isAiSelected ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
-                title="Ask AI"
-               >
-                 <Bot size={14} />
                </button>
              </div>
           </div>
@@ -1020,28 +1013,25 @@ const SearchBar = ({ inputValue, setInputValue, handleSearchSubmit, setShowAddCo
 };
 
 const Header = ({ view, setView, inputValue, setInputValue, handleSearchSubmit, aiContextPapers, searchContextPapers, setShowAddContextModal }) => (
-  <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 h-14 flex items-center px-4 justify-between shadow-sm">
-    <div className="flex items-center gap-6 flex-1">
-      <div 
-        onClick={() => { setView('home'); setInputValue(''); }}
-        className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0"
-      >
-        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
-          <Search size={18} strokeWidth={3} />
-        </div>
+  <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 h-14 flex items-center px-4 shadow-sm">
+    <div className="flex items-center gap-6 shrink-0">
+      <div onClick={() => { setView('home'); setInputValue(''); }} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white"><Search size={18} strokeWidth={3} /></div>
         <span className="font-bold text-xl tracking-tight text-gray-900">Haystack</span>
       </div>
+    </div>
 
+    <div className="flex-1 flex justify-center px-4">
       {view !== 'home' && (
         <div className="w-full max-w-lg hidden md:block">
-           <SearchBar 
-             inputValue={inputValue} 
-             setInputValue={setInputValue} 
-             handleSearchSubmit={handleSearchSubmit}
-             setShowAddContextModal={setShowAddContextModal}
-             searchContextPapers={searchContextPapers}
-             size="small"
-           />
+          <SearchBar 
+            inputValue={inputValue} 
+            setInputValue={setInputValue} 
+            handleSearchSubmit={handleSearchSubmit}
+            setShowAddContextModal={setShowAddContextModal}
+            searchContextPapers={searchContextPapers}
+            size="small"
+          />
         </div>
       )}
     </div>
@@ -1066,10 +1056,16 @@ const Header = ({ view, setView, inputValue, setInputValue, handleSearchSubmit, 
 
 const HomeView = ({ inputValue, setInputValue, handleSearchSubmit, setView, setShowAddContextModal, handleTrendingClick, searchContextPapers, handleSuggestedSearch }) => (
   <div className="max-w-4xl mx-auto px-4 py-12 flex flex-col items-center">
-    <h1 className="text-4xl font-extrabold text-gray-900 mb-8 tracking-tight">Find clarity in chaos.</h1>
-    
+    {/* Logo and Site Name */}
+    <div className="flex items-center gap-4 mb-8">
+      <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
+        <Search size={32} strokeWidth={3} />
+      </div>
+      <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Haystack</h1>
+    </div>
+
     {/* Main Search */}
-    <div className="w-full max-w-2xl relative mb-12">
+    <div className="w-full max-w-2xl relative mb-8">
       <SearchBar 
         inputValue={inputValue} 
         setInputValue={setInputValue} 
@@ -1095,7 +1091,7 @@ const HomeView = ({ inputValue, setInputValue, handleSearchSubmit, setView, setS
     </div>
 
     {/* Trending Feed (Expanded to Full Width) */}
-    <div className="w-full mt-12">
+    <div className="w-full mt-8">
       <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-6">
         <TrendingUp size={20} className="text-orange-500" /> Trending in your network
       </h2>
@@ -1181,6 +1177,21 @@ const YearSlider = () => {
         <span className="text-gray-400">-</span>
         <input type="number" value={yearRange[1]} onChange={(e) => handleInputChange(1, e.target.value)} min={minYear} max={currentYear} className="w-full text-sm border-gray-200 rounded-md text-center focus:ring-indigo-500 focus:border-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
       </div>
+    </div>
+  );
+};
+
+const Toast = ({ message, onDismiss }) => {
+  useEffect(() => {
+    const timer = setTimeout(onDismiss, 3000);
+    return () => clearTimeout(timer);
+  }, [onDismiss]);
+
+  return (
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <CheckCircle2 size={16} className="text-emerald-400" />
+      <span className="text-sm font-medium">{message}</span>
+      <button onClick={onDismiss} className="text-gray-400 hover:text-white"><X size={16} /></button>
     </div>
   );
 };
@@ -1608,6 +1619,7 @@ export default function HaystackApp() {
   const [messages, setMessages] = useState([
     { role: 'system', text: 'Hello! I can help you synthesize findings from your selected papers. What would you like to know?' }
   ]);
+  const [toastMessage, setToastMessage] = useState(null);
   const [msgInput, setMsgInput] = useState('');
 
   // Evolution Tree State
@@ -1675,8 +1687,8 @@ export default function HaystackApp() {
     if (aiContextPapers.find(p => p.id === paper.id)) {
       setAiContextPapers(aiContextPapers.filter(p => p.id !== paper.id));
     } else {
-      setAiContextPapers([...aiContextPapers, paper]);
-      setView('ai'); 
+      setAiContextPapers(prev => [...prev, paper]);
+      setToastMessage("Paper added to AI Assistant");
     }
   };
 
@@ -1790,6 +1802,8 @@ export default function HaystackApp() {
             </div>
          </div>
       </Modal>
+
+      {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />}
 
       <Modal isOpen={showAddContextModal} onClose={() => setShowAddContextModal(false)} title="Add to Search Context">
          <div className="space-y-4">
