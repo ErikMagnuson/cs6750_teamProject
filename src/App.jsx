@@ -905,9 +905,10 @@ const PaperCard = ({ paper, expandedPaperId, setExpandedPaperId, searchContextPa
               
               <div className="mb-8">
                  <h4 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide flex items-center gap-2">
-                   <Activity size={16} /> Composite Score Breakdown
+                   <Activity size={16} /> Score Breakdown
                  </h4>
                  <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <ScoreBar label="Relevance" value={29} max={35} colorClass="bg-amber-500" />
                     <ScoreBar label="Journal Impact Factor" value={paper.score.breakdown.impact} max={35} colorClass="bg-purple-500" />
                     <ScoreBar label="1st Author C-Score" value={paper.score.breakdown.author} max={35} colorClass="bg-blue-500" />
                     <ScoreBar label="Recent Citations" value={paper.score.breakdown.citations} max={35} colorClass="bg-emerald-500" />
