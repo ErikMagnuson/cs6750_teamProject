@@ -790,7 +790,11 @@ const PaperCard = ({ paper, expandedPaperId, setExpandedPaperId, searchContextPa
 
             {/* Tags Row */}
             <div className="flex items-center flex-wrap gap-2 mb-3">
-              <span className="font-medium text-gray-900 text-[11px] mr-1">{paper.journal}</span>
+              <span className="flex items-center gap-1.5 font-medium text-gray-900 text-[11px]">
+                <BookOpen size={12} className="text-gray-400" />
+                {paper.journal}
+              </span>
+              <span className="text-gray-300 mx-1">|</span>
               {paper.tags.map(tag => (
                  <Tag key={tag} text={tag} type={tag === 'Trending' ? 'trending' : tag === 'Highly influential' ? 'influential' : 'default'} />
               ))}
